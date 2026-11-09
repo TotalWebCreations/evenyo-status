@@ -6,7 +6,7 @@ Deze pagina draait los van de Evenyo-server. Ligt de server plat, dan blijft de 
 
 ## Hoe het werkt
 
-- Een GitHub Action (`.github/workflows/status.yml`) draait elke 5 minuten `node scripts/check.mjs`. GitHub kan zo'n geplande run een paar minuten later starten.
+- Een GitHub Action (`.github/workflows/status.yml`) draait `node scripts/check.mjs`. cron-job.org start die elke 5 minuten via de GitHub-API (POST naar `.../actions/workflows/status.yml/dispatches` met `{"ref":"main"}` en een fine-grained token met alleen Actions: read and write op deze repo). GitHubs eigen schedule bleek te onbetrouwbaar. Is de laatste controle ouder dan 15 minuten, dan meldt de pagina dat zelf.
 - Het script controleert Evenyo van buitenaf:
   - **Backoffice:** `https://app.evenyo.io/up`, plus database en cache.
   - **Inschrijfsites:** `https://status-check.evenyo.io/up`, een sitedomein dat niet van één klant afhangt.

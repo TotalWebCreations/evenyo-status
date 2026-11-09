@@ -1,8 +1,7 @@
 name: Status
 
+# Elke 5 minuten gestart door cron-job.org via de GitHub-API (workflow_dispatch): stipter dan GitHubs eigen schedule.
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   push:
     branches: [main]
   workflow_dispatch:
@@ -16,7 +15,6 @@ permissions:
   contents: read
   pages: write
   id-token: write
-  actions: write
 
 concurrency:
   group: status
@@ -50,10 +48,3 @@ jobs:
 
       - id: deploy
         uses: actions/deploy-pages@v4
-
-      # GitHub zet geplande workflows na 60 dagen zonder activiteit in de repo uit. Opnieuw aanzetten reset die teller.
-      - name: Planning actief houden
-        if: github.event_name == 'schedule'
-        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/status.yml/enable"
-        env:
-          GH_TOKEN: ${{ github.token }}
