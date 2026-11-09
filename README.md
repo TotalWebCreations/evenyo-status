@@ -9,14 +9,18 @@ Deze pagina draait los van de Evenyo-server. Ligt de server plat, dan blijft de 
 - Een GitHub Action (`.github/workflows/status.yml`) draait elke 5 minuten `node scripts/check.mjs`. GitHub kan zo'n geplande run een paar minuten later starten.
 - Het script controleert Evenyo van buitenaf:
   - **Backoffice:** `https://app.evenyo.io/up`, plus database en cache.
-  - **Inschrijfsites:** een clubsite.
-  - **Apps:** de app-API.
+  - **Inschrijfsites:** `https://status-check.evenyo.io/up`, een sitedomein dat niet van één klant afhangt.
+  - **Apps:** `https://app.evenyo.io/api/v1/ping`.
+  - **Live timing:** ook een echte websocketverbinding van buitenaf, met het adres uit `status.json`.
   - **Overige onderdelen:** live timing, achtergrondtaken en bestanden leest het uit `https://app.evenyo.io/status.json`. Dat is het openbare statusadres in evenyo-v3; het geeft per onderdeel alleen `operational` of `outage` terug, zonder technische details.
 - Mislukt een meting, dan probeert het script het na 5 seconden nog één keer. Pas daarna telt het als storing. Een antwoord dat langer dan 4 seconden duurt, telt als "traag".
 - De geschiedenis van 90 dagen staat in `history.json` op de gepubliceerde site. Elke run haalt dat bestand op, voegt de meting toe en publiceert alles opnieuw naar GitHub Pages.
   - Is de vorige geschiedenis niet op te halen, dan stopt de run en overschrijft hij niets.
   - Begin je opnieuw (bijvoorbeeld na een verhuizing), start de workflow dan handmatig met **fresh** aangevinkt.
-- Onderdelen staan in `checks.config.json`.
+- Tijdens lopend onderhoud telt uitval van de betrokken onderdelen niet mee in het percentage; de dag wordt blauw.
+- De laatst bekende meldingen uit Evenyo worden bewaard, zodat ze zichtbaar blijven als Evenyo zelf plat ligt.
+- De pagina is er in het Nederlands (`/`), Engels (`/en/`) en Duits (`/de/`). Bij het eerste bezoek kiest hij de taal van de browser.
+- Onderdelen staan in `checks.config.json`, met namen per taal. Meldingen verschijnen in de taal waarin je ze schrijft.
 
 ## Een storing of onderhoud melden
 

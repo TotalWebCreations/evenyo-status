@@ -5,7 +5,7 @@ import { copyFile, mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { render } from './render.mjs';
+import { languages, render, text } from './render.mjs';
 import { fromPlatform, parseIncident } from './incidents.mjs';
 import { dayKey, lastDays } from './days.mjs';
 
@@ -19,6 +19,12 @@ const now = new Date();
 const history = await loadHistory();
 const platformBody = await checkPlatform();
 const platform = platformBody?.components ?? null;
+
+// Laatst bekende meldingen bewaren: ligt Evenyo plat (bijvoorbeeld tijdens onderhoud), dan blijven ze zichtbaar.
+if (Array.isArray(platformBody?.incidents)) {
+    history.platformIncidents = platformBody.incidents;
+}
+
 const incidents = await loadIncidents();
 
 const components = [];
@@ -34,6 +40,10 @@ for (const component of config.components) {
         results.push(platformResult(key));
     }
 
+    if (component.websocket && platformBody?.realtime?.url) {
+        results.push(await checkWebSocket(platformBody.realtime.url));
+    }
+
     const measured = worst(results.map((result) => result.state));
     const reported = worst(incidents.filter((incident) => incident.active && incident.components.includes(component.id)).map((incident) => incident.impact));
     const state = rank[reported] > rank[measured] ? reported : measured;
@@ -45,7 +55,9 @@ for (const component of config.components) {
         responseMs: results.find((result) => result.ms !== undefined)?.ms,
     });
 
-    record(component.id, measured);
+    const inMaintenance = incidents.some((incident) => incident.active && incident.impact === 'maintenance' && (incident.components.length === 0 || incident.components.includes(component.id)));
+
+    record(component.id, measured, inMaintenance);
 }
 
 prune();
@@ -65,7 +77,13 @@ const status = {
 await mkdir(join(dist, 'assets'), { recursive: true });
 await writeFile(join(dist, 'history.json'), JSON.stringify(history));
 await writeFile(join(dist, 'status.json'), JSON.stringify(status, null, 2));
-await writeFile(join(dist, 'index.html'), render({ config, components, history, incidents, overall, now, timeZone }));
+for (const lang of languages) {
+    const dir = lang === 'nl' ? dist : join(dist, lang);
+
+    await mkdir(dir, { recursive: true });
+    await writeFile(join(dir, 'index.html'), render({ config, components, history, incidents, overall, now, timeZone, lang }));
+}
+
 await writeFile(join(dist, 'CNAME'), `${new URL(config.siteUrl).host}\n`);
 
 for (const file of await readdir(join(root, 'assets'))) {
@@ -73,7 +91,7 @@ for (const file of await readdir(join(root, 'assets'))) {
 }
 
 for (const component of components) {
-    console.log(`${component.state.padEnd(12)} ${component.name}${component.responseMs !== undefined ? ` (${component.responseMs} ms)` : ''}`);
+    console.log(`${component.state.padEnd(12)} ${text(component.name, 'nl')}${component.responseMs !== undefined ? ` (${component.responseMs} ms)` : ''}`);
 }
 
 console.log(`Totaal: ${overall}`);
@@ -172,6 +190,50 @@ async function checkPlatform(attempt = 1) {
     }
 }
 
+async function checkWebSocket(url, attempt = 1) {
+    if (typeof WebSocket === 'undefined') {
+        console.error('Geen WebSocket in deze Node-versie (22 of hoger nodig), websocket-check overgeslagen.');
+
+        return { state: 'operational' };
+    }
+
+    const started = performance.now();
+    const ms = await new Promise((resolve) => {
+        const socket = new WebSocket(url);
+        const timer = setTimeout(() => {
+            socket.close();
+            resolve(null);
+        }, config.timeoutMs);
+
+        socket.addEventListener('message', (event) => {
+            if (String(event.data).includes('pusher:connection_established')) {
+                clearTimeout(timer);
+                socket.close();
+                resolve(Math.round(performance.now() - started));
+            }
+        });
+
+        socket.addEventListener('error', () => {
+            clearTimeout(timer);
+            resolve(null);
+        });
+    });
+
+    if (ms !== null) {
+        return { state: ms > config.slowAfterMs ? 'degraded' : 'operational', ms };
+    }
+
+    if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+
+        return checkWebSocket(url, attempt + 1);
+    }
+
+    console.error(`${url.replace(/\/app\/[^?]+/, '/app/…')}: geen verbinding`);
+
+    return { state: 'outage' };
+}
+
 function platformResult(key) {
     if (platform === null) {
         return { state: 'outage' };
@@ -190,7 +252,7 @@ async function loadIncidents() {
     }
 
     // Meldingen die de super admin in Evenyo zet. Ligt Evenyo plat, dan zijn alleen de markdown-meldingen er.
-    for (const incident of platformBody?.incidents ?? []) {
+    for (const incident of platformBody?.incidents ?? history.platformIncidents ?? []) {
         parsed.push(fromPlatform(incident, now));
     }
 
@@ -201,11 +263,18 @@ function worst(states) {
     return states.reduce((current, state) => (rank[state] > rank[current] ? state : current), 'operational');
 }
 
-function record(id, state) {
+function record(id, state, inMaintenance) {
     const day = dayKey(now, timeZone);
     const bucket = (history.days[day] ??= {})[id] ??= { n: 0, down: 0, degraded: 0 };
 
     bucket.n += 1;
+
+    // Tijdens aangekondigd onderhoud telt uitval niet als onbeschikbaar.
+    if (inMaintenance && state !== 'operational') {
+        bucket.maintenance = (bucket.maintenance ?? 0) + 1;
+
+        return;
+    }
 
     if (state === 'outage') {
         bucket.down += 1;

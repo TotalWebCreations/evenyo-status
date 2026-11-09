@@ -7,42 +7,64 @@
   "components": [
     {
       "id": "backoffice",
-      "name": "Backoffice",
-      "description": "app.evenyo.io: inschrijvingen, betalingen en racedag beheren",
+      "name": { "nl": "Backoffice", "en": "Back office", "de": "Backoffice" },
+      "description": {
+        "nl": "app.evenyo.io: inschrijvingen, betalingen en racedag beheren",
+        "en": "app.evenyo.io: manage entries, payments and race day",
+        "de": "app.evenyo.io: Anmeldungen, Zahlungen und Renntag verwalten"
+      },
       "http": { "url": "https://app.evenyo.io/up" },
       "platform": ["database", "cache"]
     },
     {
       "id": "sites",
-      "name": "Inschrijfsites",
-      "description": "De sites van organisaties, zoals club.evenyo.io",
-      "http": { "url": "https://kce.evenyo.io" }
+      "name": { "nl": "Inschrijfsites", "en": "Registration sites", "de": "Anmeldeseiten" },
+      "description": {
+        "nl": "De sites van organisaties, zoals club.evenyo.io",
+        "en": "The sites of organisations, such as club.evenyo.io",
+        "de": "Die Seiten der Veranstalter, wie club.evenyo.io"
+      },
+      "http": { "url": "https://status-check.evenyo.io/up" }
     },
     {
       "id": "apps",
-      "name": "Apps",
-      "description": "Rijders-app en officials-app",
-      "http": {
-        "url": "https://app.evenyo.io/api/v1/app/config",
-        "headers": { "X-Organisation": "kce", "Accept": "application/json" }
-      }
+      "name": { "nl": "Apps", "en": "Apps", "de": "Apps" },
+      "description": {
+        "nl": "Rijders-app en officials-app",
+        "en": "Rider app and officials app",
+        "de": "Fahrer-App und Officials-App"
+      },
+      "http": { "url": "https://app.evenyo.io/api/v1/ping", "headers": { "Accept": "application/json" } }
     },
     {
       "id": "realtime",
-      "name": "Live timing",
-      "description": "Live uitslagen en meldingen tijdens de racedag",
-      "platform": ["realtime"]
+      "name": { "nl": "Live timing", "en": "Live timing", "de": "Live-Timing" },
+      "description": {
+        "nl": "Live uitslagen en meldingen tijdens de racedag",
+        "en": "Live results and notices on race day",
+        "de": "Live-Ergebnisse und Meldungen am Renntag"
+      },
+      "platform": ["realtime"],
+      "websocket": true
     },
     {
       "id": "jobs",
-      "name": "E-mails en achtergrondtaken",
-      "description": "Bevestigingen, facturen en geplande taken",
+      "name": { "nl": "E-mails en achtergrondtaken", "en": "Emails and background tasks", "de": "E-Mails und Hintergrundaufgaben" },
+      "description": {
+        "nl": "Bevestigingen, facturen en geplande taken",
+        "en": "Confirmations, invoices and scheduled tasks",
+        "de": "Bestätigungen, Rechnungen und geplante Aufgaben"
+      },
       "platform": ["scheduler", "queue"]
     },
     {
       "id": "files",
-      "name": "Bestanden en foto's",
-      "description": "Logo's, documenten en uploads",
+      "name": { "nl": "Bestanden en foto's", "en": "Files and photos", "de": "Dateien und Fotos" },
+      "description": {
+        "nl": "Logo's, documenten en uploads",
+        "en": "Logos, documents and uploads",
+        "de": "Logos, Dokumente und Uploads"
+      },
       "platform": ["storage"]
     }
   ]
