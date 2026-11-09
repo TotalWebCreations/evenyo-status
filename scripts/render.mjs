@@ -118,7 +118,7 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:16px;paddi
 .logo span{height:20px;padding:0 8px;border-radius:6px;background:var(--blue);color:#fff;font-size:11px;font-weight:800;letter-spacing:1.2px;display:flex;align-items:center}
 nav a.back{color:#C9D3E6;font-size:15px;font-weight:700;text-decoration:none}
 nav a.back:hover{color:#fff}
-.summary{padding:72px 0 176px;max-width:560px}
+.summary{padding:72px 0 148px;max-width:560px}
 .pill{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;background:#fff;font-size:14px;font-weight:800}
 .pill i{width:9px;height:9px;border-radius:999px}
 .pill.operational{color:var(--green)}.pill.operational i{background:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
@@ -126,10 +126,10 @@ nav a.back:hover{color:#fff}
 .pill.outage{color:var(--red)}.pill.outage i{background:var(--red);box-shadow:0 0 0 4px var(--red-soft)}
 .summary h1{margin:18px 0 0;font-size:40px;line-height:1.1;font-weight:900;letter-spacing:-.8px}
 .summary p{margin:14px 0 0;font-size:15px;line-height:1.5;color:#C9D3E6}
-main{padding-bottom:48px}
+main.wrap{position:relative;margin-top:-88px;padding-bottom:48px}
+.panel+.panel{margin-top:16px}
 .panel{background:#fff;border-radius:28px;box-shadow:0 1px 2px rgba(11,23,51,.04),0 12px 32px rgba(11,23,51,.06)}
 h2{margin:40px 4px 14px;font-size:20px;font-weight:900;letter-spacing:-.3px}
-h2.first{margin-top:48px}
 .components{list-style:none;margin:0;padding:6px 28px}
 .component{padding:22px 0;border-top:1px solid var(--line)}
 .component:first-child{border-top:0}
@@ -168,7 +168,8 @@ footer{padding:8px 4px 0;font-size:13px;color:var(--muted);line-height:1.6}
 @media (max-width:640px){
   nav{padding-top:20px}
   nav a.back{display:none}
-  .summary{padding:44px 0 128px}
+  .summary{padding:44px 0 104px}
+  main.wrap{margin-top:-56px}
   .hero .track{height:110px}
   .summary h1{font-size:30px}
   .components{padding:4px 20px}
@@ -199,10 +200,9 @@ footer{padding:8px 4px 0;font-size:13px;color:var(--muted);line-height:1.6}
     </div>
 </header>
 <main class="wrap">
-    ${active.length ? `<h2 class="first">Lopende meldingen</h2><section class="panel alert">${active.map(incidentCard).join('')}</section>` : ''}
-    ${scheduled.length ? `<h2${active.length ? '' : ' class="first"'}>Gepland onderhoud</h2><section class="panel">${scheduled.map(incidentCard).join('')}</section>` : ''}
+    ${active.length ? `<section class="panel alert">${active.map(incidentCard).join('')}</section>` : ''}
+    ${scheduled.length ? `<section class="panel">${scheduled.map(incidentCard).join('')}</section>` : ''}
 
-    <h2${active.length || scheduled.length ? '' : ' class="first"'}>Onderdelen</h2>
     <section class="panel"><ul class="components">${rows}</ul></section>
 
     <h2>Eerdere meldingen</h2>
