@@ -1,0 +1,49 @@
+{
+  "siteUrl": "https://status.evenyo.io",
+  "platformStatusUrl": "https://app.evenyo.io/status.json",
+  "slowAfterMs": 4000,
+  "timeoutMs": 10000,
+  "historyDays": 90,
+  "components": [
+    {
+      "id": "backoffice",
+      "name": "Backoffice",
+      "description": "app.evenyo.io: inschrijvingen, betalingen en racedag beheren",
+      "http": { "url": "https://app.evenyo.io/up" },
+      "platform": ["database", "cache"]
+    },
+    {
+      "id": "sites",
+      "name": "Inschrijfsites",
+      "description": "De sites van organisaties, zoals club.evenyo.io",
+      "http": { "url": "https://kce.evenyo.io" }
+    },
+    {
+      "id": "apps",
+      "name": "Apps",
+      "description": "Rijders-app en officials-app",
+      "http": {
+        "url": "https://app.evenyo.io/api/v1/app/config",
+        "headers": { "X-Organisation": "kce", "Accept": "application/json" }
+      }
+    },
+    {
+      "id": "realtime",
+      "name": "Live timing",
+      "description": "Live uitslagen en meldingen tijdens de racedag",
+      "platform": ["realtime"]
+    },
+    {
+      "id": "jobs",
+      "name": "E-mails en achtergrondtaken",
+      "description": "Bevestigingen, facturen en geplande taken",
+      "platform": ["scheduler", "queue"]
+    },
+    {
+      "id": "files",
+      "name": "Bestanden en foto's",
+      "description": "Logo's, documenten en uploads",
+      "platform": ["storage"]
+    }
+  ]
+}

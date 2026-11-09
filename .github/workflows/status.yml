@@ -1,0 +1,59 @@
+name: Status
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: 'Begin met lege geschiedenis als de vorige niet op te halen is'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  actions: write
+
+concurrency:
+  group: status
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Evenyo controleren en pagina bouwen
+        run: node scripts/check.mjs
+        env:
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io/{1}', github.repository_owner, github.event.repository.name) }}
+          ALLOW_FRESH_HISTORY: ${{ inputs.fresh || 'false' }}
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
+
+      # GitHub zet geplande workflows na 60 dagen zonder activiteit in de repo uit. Opnieuw aanzetten reset die teller.
+      - name: Planning actief houden
+        if: github.event_name == 'schedule'
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/status.yml/enable"
+        env:
+          GH_TOKEN: ${{ github.token }}
