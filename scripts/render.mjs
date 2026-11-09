@@ -21,6 +21,7 @@ const T = {
         noData: 'geen metingen', inMaintenance: 'onderhoud', available: 'beschikbaar', noChecks: 'Nog geen metingen',
         daysAgo: (n) => `${n} dagen geleden`, today: 'Vandaag', barsLabel: (n) => `Beschikbaarheid per dag, laatste ${n} dagen`,
         past: 'Eerdere meldingen', noPast: 'Geen meldingen in de afgelopen 90 dagen.',
+        stale: 'Let op: de laatste controle is al {m} minuten oud. Deze pagina is mogelijk niet actueel.',
         footer: 'Werkt er iets niet, maar staat het hier niet? Mail ons via',
     },
     en: {
@@ -40,6 +41,7 @@ const T = {
         noData: 'no checks', inMaintenance: 'maintenance', available: 'available', noChecks: 'No checks yet',
         daysAgo: (n) => `${n} days ago`, today: 'Today', barsLabel: (n) => `Availability per day, last ${n} days`,
         past: 'Past notices', noPast: 'No notices in the last 90 days.',
+        stale: 'Note: the last check was {m} minutes ago. This page may be out of date.',
         footer: 'Something not working, but not listed here? Email us at',
     },
     de: {
@@ -59,6 +61,7 @@ const T = {
         noData: 'keine Messungen', inMaintenance: 'Wartung', available: 'verfügbar', noChecks: 'Noch keine Messungen',
         daysAgo: (n) => `vor ${n} Tagen`, today: 'Heute', barsLabel: (n) => `Verfügbarkeit pro Tag, letzte ${n} Tage`,
         past: 'Frühere Meldungen', noPast: 'Keine Meldungen in den letzten 90 Tagen.',
+        stale: 'Hinweis: Die letzte Prüfung ist schon {m} Minuten alt. Diese Seite ist möglicherweise nicht aktuell.',
         footer: 'Funktioniert etwas nicht, steht aber nicht hier? Schreib uns an',
     },
 };
@@ -205,6 +208,8 @@ nav a.back:hover{color:#fff}
 .pill.outage{color:var(--red)}.pill.outage i{background:var(--red)}
 .summary h1{margin:18px 0 0;font-size:40px;line-height:1.1;font-weight:900;letter-spacing:-.8px}
 .summary p{margin:14px 0 0;font-size:15px;line-height:1.5;color:#C9D3E6}
+.summary .stale{display:inline-block;margin-top:14px;padding:8px 12px;border-radius:12px;background:var(--amber-soft);color:#7A4E00;font-weight:700}
+.summary .stale[hidden]{display:none}
 main.wrap{position:relative;margin-top:-88px;padding-bottom:48px}
 .panel+.panel{margin-top:16px}
 .panel{background:#fff;border-radius:28px;box-shadow:0 1px 2px rgba(11,23,51,.04),0 12px 32px rgba(11,23,51,.06)}
@@ -294,6 +299,7 @@ try {
             <span class="pill ${overall}"><i></i>${bannerTitle}</span>
             <h1>${bannerText}</h1>
             <p>${t.checked(time(now, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}</p>
+            <p class="stale" data-checked="${now.toISOString()}" data-text="${escape(t.stale)}" hidden></p>
         </div>
     </div>
 </header>
@@ -311,6 +317,16 @@ try {
     </footer>
 </main>
 <script>
+// Draaide de controle al een tijd niet, dan zeggen we dat eerlijk in plaats van een oude "Alles werkt".
+(() => {
+    const stale = document.querySelector('.stale');
+    const minutes = Math.round((Date.now() - new Date(stale.dataset.checked)) / 60000);
+
+    if (minutes >= 15) {
+        stale.textContent = stale.dataset.text.replace('{m}', minutes);
+        stale.hidden = false;
+    }
+})();
 document.querySelectorAll('.langs a').forEach((link) => link.addEventListener('click', () => {
     try { localStorage.setItem('evenyo-status-lang', link.dataset.lang); } catch (error) {}
 }));
