@@ -11,7 +11,7 @@ const labels = {
 const banners = {
     operational: ['Alles werkt', 'Alle onderdelen van Evenyo werken normaal.'],
     maintenance: ['Gepland onderhoud', 'Een deel van Evenyo is tijdelijk in onderhoud.'],
-    degraded: ['Een deel werkt beperkt', 'Sommige onderdelen zijn traag of werken niet volledig. We kijken ernaar.'],
+    degraded: ['Werkt beperkt', 'Sommige onderdelen zijn traag of werken niet volledig.'],
     outage: ['Storing', 'Een deel van Evenyo werkt nu niet. We werken aan een oplossing.'],
 };
 
@@ -109,24 +109,27 @@ export function render({ config, components, history, incidents, overall, now, t
 body{margin:0;background:var(--soft);color:var(--ink);font-family:Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 a{color:var(--blue)}
 .wrap{max-width:820px;margin:0 auto;padding:0 16px}
-header{background:var(--ink);color:#fff;padding:28px 0 96px}
-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.hero{position:relative;overflow:hidden;background:var(--ink);color:#fff}
+.hero .track{position:absolute;left:0;right:0;bottom:0;width:100%;height:160px;display:block}
+.hero .wrap{position:relative}
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:28px}
 .logo{display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:#fff;box-shadow:0 6px 18px rgba(11,23,51,.12)}
 .logo img{height:22px;display:block}
 .logo span{height:20px;padding:0 8px;border-radius:6px;background:var(--blue);color:#fff;font-size:11px;font-weight:800;letter-spacing:1.2px;display:flex;align-items:center}
-header a.back{color:#C9D3E6;font-size:15px;font-weight:700;text-decoration:none}
-header a.back:hover{color:#fff}
-main{margin-top:-64px;padding-bottom:48px}
+nav a.back{color:#C9D3E6;font-size:15px;font-weight:700;text-decoration:none}
+nav a.back:hover{color:#fff}
+.summary{padding:72px 0 176px;max-width:560px}
+.pill{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;background:#fff;font-size:14px;font-weight:800}
+.pill i{width:9px;height:9px;border-radius:999px}
+.pill.operational{color:var(--green)}.pill.operational i{background:var(--green);box-shadow:0 0 0 4px var(--green-soft)}
+.pill.degraded,.pill.maintenance{color:#9A6200}.pill.degraded i,.pill.maintenance i{background:var(--amber);box-shadow:0 0 0 4px var(--amber-soft)}
+.pill.outage{color:var(--red)}.pill.outage i{background:var(--red);box-shadow:0 0 0 4px var(--red-soft)}
+.summary h1{margin:18px 0 0;font-size:40px;line-height:1.1;font-weight:900;letter-spacing:-.8px}
+.summary p{margin:14px 0 0;font-size:15px;line-height:1.5;color:#C9D3E6}
+main{padding-bottom:48px}
 .panel{background:#fff;border-radius:28px;box-shadow:0 1px 2px rgba(11,23,51,.04),0 12px 32px rgba(11,23,51,.06)}
-.banner{padding:28px 28px 26px;display:flex;gap:18px;align-items:flex-start}
-.banner .dot{width:48px;height:48px;flex:none;border-radius:999px;display:flex;align-items:center;justify-content:center}
-.banner.operational .dot{background:var(--green-soft);color:var(--green)}
-.banner.degraded .dot,.banner.maintenance .dot{background:var(--amber-soft);color:var(--amber)}
-.banner.outage .dot{background:var(--red-soft);color:var(--red)}
-.banner h1{margin:0;font-size:30px;line-height:1.15;font-weight:900;letter-spacing:-.6px}
-.banner p{margin:6px 0 0;font-size:16px;line-height:1.5;color:var(--ink-2)}
-.banner small{display:block;margin-top:10px;font-size:13px;color:var(--muted)}
-h2{margin:36px 4px 14px;font-size:20px;font-weight:900;letter-spacing:-.3px}
+h2{margin:40px 4px 14px;font-size:20px;font-weight:900;letter-spacing:-.3px}
+h2.first{margin-top:48px}
 .components{list-style:none;margin:0;padding:6px 28px}
 .component{padding:22px 0;border-top:1px solid var(--line)}
 .component:first-child{border-top:0}
@@ -163,9 +166,11 @@ h2{margin:36px 4px 14px;font-size:20px;font-weight:900;letter-spacing:-.3px}
 .panel.alert{border:2px solid var(--red-soft)}
 footer{padding:8px 4px 0;font-size:13px;color:var(--muted);line-height:1.6}
 @media (max-width:640px){
-  header{padding:20px 0 84px}
-  .banner{padding:22px 20px}
-  .banner h1{font-size:24px}
+  nav{padding-top:20px}
+  nav a.back{display:none}
+  .summary{padding:44px 0 128px}
+  .hero .track{height:110px}
+  .summary h1{font-size:30px}
   .components{padding:4px 20px}
   .incident,.empty{padding:20px}
   .component-head{flex-direction:column;gap:10px}
@@ -176,28 +181,28 @@ footer{padding:8px 4px 0;font-size:13px;color:var(--muted);line-height:1.6}
 </style>
 </head>
 <body>
-<header>
+<header class="hero ${overall}">
+    <svg class="track" aria-hidden="true" viewBox="0 0 1440 160" preserveAspectRatio="none">
+        <path d="M-20 150 C 420 175 760 30 1460 60" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="54" vector-effect="non-scaling-stroke"/>
+        <path d="M-20 150 C 420 175 760 30 1460 60" fill="none" stroke="#1C2A4A" stroke-width="46" vector-effect="non-scaling-stroke"/>
+    </svg>
     <div class="wrap">
-        <a class="logo" href="./" aria-label="Evenyo status"><img src="assets/logo.svg" alt="Evenyo"><span>STATUS</span></a>
-        <a class="back" href="https://evenyo.io">Naar evenyo.io</a>
+        <nav>
+            <a class="logo" href="./" aria-label="Evenyo status"><img src="assets/logo.svg" alt="Evenyo"><span>STATUS</span></a>
+            <a class="back" href="https://evenyo.io">Naar evenyo.io</a>
+        </nav>
+        <div class="summary">
+            <span class="pill ${overall}"><i></i>${bannerTitle}</span>
+            <h1>${bannerText}</h1>
+            <p>Laatst gecontroleerd ${time(now, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}. We controleren elke paar minuten van buitenaf.</p>
+        </div>
     </div>
 </header>
 <main class="wrap">
-    <section class="panel banner ${overall}">
-        <span class="dot" aria-hidden="true">${overall === 'operational'
-            ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>'
-            : '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/></svg>'}</span>
-        <div>
-            <h1>${bannerTitle}</h1>
-            <p>${bannerText}</p>
-            <small>Laatst gecontroleerd ${time(now, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}. We controleren elke paar minuten van buitenaf.</small>
-        </div>
-    </section>
+    ${active.length ? `<h2 class="first">Lopende meldingen</h2><section class="panel alert">${active.map(incidentCard).join('')}</section>` : ''}
+    ${scheduled.length ? `<h2${active.length ? '' : ' class="first"'}>Gepland onderhoud</h2><section class="panel">${scheduled.map(incidentCard).join('')}</section>` : ''}
 
-    ${active.length ? `<h2>Lopende meldingen</h2><section class="panel alert">${active.map(incidentCard).join('')}</section>` : ''}
-    ${scheduled.length ? `<h2>Gepland onderhoud</h2><section class="panel">${scheduled.map(incidentCard).join('')}</section>` : ''}
-
-    <h2>Onderdelen</h2>
+    <h2${active.length || scheduled.length ? '' : ' class="first"'}>Onderdelen</h2>
     <section class="panel"><ul class="components">${rows}</ul></section>
 
     <h2>Eerdere meldingen</h2>
