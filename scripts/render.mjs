@@ -22,6 +22,7 @@ const T = {
         daysAgo: (n) => `${n} dagen geleden`, today: 'Vandaag', barsLabel: (n) => `Beschikbaarheid per dag, laatste ${n} dagen`,
         past: 'Eerdere meldingen', noPast: 'Geen meldingen in de afgelopen 90 dagen.',
         stale: 'Let op: de laatste controle is al {m} minuten oud. Deze pagina is mogelijk niet actueel.',
+        justNow: 'zojuist', minutesAgo: '{m} min. geleden',
         footer: 'Werkt er iets niet, maar staat het hier niet? Mail ons via',
     },
     en: {
@@ -42,6 +43,7 @@ const T = {
         daysAgo: (n) => `${n} days ago`, today: 'Today', barsLabel: (n) => `Availability per day, last ${n} days`,
         past: 'Past notices', noPast: 'No notices in the last 90 days.',
         stale: 'Note: the last check was {m} minutes ago. This page may be out of date.',
+        justNow: 'just now', minutesAgo: '{m} min. ago',
         footer: 'Something not working, but not listed here? Email us at',
     },
     de: {
@@ -62,6 +64,7 @@ const T = {
         daysAgo: (n) => `vor ${n} Tagen`, today: 'Heute', barsLabel: (n) => `Verfügbarkeit pro Tag, letzte ${n} Tage`,
         past: 'Frühere Meldungen', noPast: 'Keine Meldungen in den letzten 90 Tagen.',
         stale: 'Hinweis: Die letzte Prüfung ist schon {m} Minuten alt. Diese Seite ist möglicherweise nicht aktuell.',
+        justNow: 'gerade eben', minutesAgo: 'vor {m} Min.',
         footer: 'Funktioniert etwas nicht, steht aber nicht hier? Schreib uns an',
     },
 };
@@ -171,7 +174,6 @@ export function render({ config, components, history, incidents, overall, now, t
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="refresh" content="120">
 <title>Evenyo status</title>
 <meta name="description" content="${t.description}">
 ${languages.map((code) => `<link rel="alternate" hreflang="${code}" href="${config.siteUrl}/${code === 'nl' ? '' : `${code}/`}">`).join('\n')}
@@ -298,7 +300,7 @@ try {
         <div class="summary">
             <span class="pill ${overall}"><i></i>${bannerTitle}</span>
             <h1>${bannerText}</h1>
-            <p>${t.checked(time(now, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }))}</p>
+            <p>${t.checked(`${time(now, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })} <span class="ago" data-just-now="${escape(t.justNow)}" data-minutes-ago="${escape(t.minutesAgo)}"></span>`)}</p>
             <p class="stale" data-checked="${now.toISOString()}" data-text="${escape(t.stale)}" hidden></p>
         </div>
     </div>
@@ -318,14 +320,35 @@ try {
 </main>
 <script>
 // Draaide de controle al een tijd niet, dan zeggen we dat eerlijk in plaats van een oude "Alles werkt".
+// GitHub Pages laat browsers de pagina 10 minuten bewaren. Daarom kijken we zelf elke minuut, buiten die cache om,
+// of er een nieuwere controle is, en laden we dan de verse pagina.
 (() => {
     const stale = document.querySelector('.stale');
-    const minutes = Math.round((Date.now() - new Date(stale.dataset.checked)) / 60000);
+    const ago = document.querySelector('.ago');
+    const checked = new Date(stale.dataset.checked);
 
-    if (minutes >= 15) {
+    const update = () => {
+        const minutes = Math.floor((Date.now() - checked) / 60000);
+
+        ago.textContent = '(' + (minutes < 1 ? ago.dataset.justNow : ago.dataset.minutesAgo.replace('{m}', minutes)) + ')';
+        stale.hidden = minutes < 15;
         stale.textContent = stale.dataset.text.replace('{m}', minutes);
-        stale.hidden = false;
-    }
+    };
+
+    const poll = async () => {
+        try {
+            const response = await fetch('${base}status.json?t=' + Date.now(), { cache: 'no-store' });
+            const status = await response.json();
+
+            if (new Date(status.checked_at) > checked) {
+                location.replace(location.pathname + '?t=' + Date.now());
+            }
+        } catch (error) {}
+    };
+
+    update();
+    setInterval(update, 30000);
+    setInterval(poll, 60000);
 })();
 document.querySelectorAll('.langs a').forEach((link) => link.addEventListener('click', () => {
     try { localStorage.setItem('evenyo-status-lang', link.dataset.lang); } catch (error) {}
