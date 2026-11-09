@@ -22,8 +22,9 @@ export function parseIncident(file, source, now) {
 
     const impact = impacts.includes(meta.impact) ? meta.impact : 'degraded';
     const startedAt = parseLocal(meta.started);
-    const resolvedAt = parseLocal(meta.resolved);
-    const scheduled = impact === 'maintenance' && startedAt && startedAt > now;
+    const endsAt = parseLocal(meta.ends);
+    const resolvedAt = parseLocal(meta.resolved) ?? (impact === 'maintenance' && endsAt && endsAt <= now ? endsAt : null);
+    const scheduled = impact === 'maintenance' && ! resolvedAt && startedAt && startedAt > now;
 
     return {
         file,
@@ -32,10 +33,35 @@ export function parseIncident(file, source, now) {
         components: (meta.components ?? '').split(',').map((id) => id.trim()).filter(Boolean),
         started: meta.started ?? null,
         startedAt,
+        endsAt,
         resolvedAt,
         scheduled,
         active: ! resolvedAt && ! scheduled,
         html: markdown(match[2].trim()),
+    };
+}
+
+// Een melding uit app.evenyo.io/status.json (super admin → Statuspagina).
+export function fromPlatform(incident, now) {
+    const impact = impacts.includes(incident.impact) ? incident.impact : 'degraded';
+    const startedAt = new Date(incident.starts_at);
+    const endsAt = incident.ends_at ? new Date(incident.ends_at) : null;
+    const resolvedAt = incident.resolved_at ? new Date(incident.resolved_at) : null;
+    const scheduled = impact === 'maintenance' && ! resolvedAt && startedAt > now;
+    const time = new Intl.DateTimeFormat('nl-NL', { timeZone: 'Europe/Amsterdam', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+    return {
+        file: `evenyo-${incident.id}`,
+        title: incident.title,
+        impact,
+        components: incident.components ?? [],
+        started: incident.starts_at,
+        startedAt,
+        endsAt,
+        resolvedAt,
+        scheduled,
+        active: ! resolvedAt && ! scheduled,
+        html: (incident.updates ?? []).map((update) => `<h4>${escape(time.format(new Date(update.at)))}</h4><p>${escape(update.body).replace(/\r?\n/g, '<br>')}</p>`).join(''),
     };
 }
 

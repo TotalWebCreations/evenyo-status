@@ -6,7 +6,7 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { render } from './render.mjs';
-import { parseIncident } from './incidents.mjs';
+import { fromPlatform, parseIncident } from './incidents.mjs';
 import { dayKey, lastDays } from './days.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,7 +17,8 @@ const rank = { operational: 0, maintenance: 1, degraded: 2, outage: 3 };
 
 const now = new Date();
 const history = await loadHistory();
-const platform = await checkPlatform();
+const platformBody = await checkPlatform();
+const platform = platformBody?.components ?? null;
 const incidents = await loadIncidents();
 
 const components = [];
@@ -49,7 +50,11 @@ for (const component of config.components) {
 
 prune();
 
-const overall = worst(components.map((component) => component.state));
+// Een lopende melding zonder onderdelen (of met iets wat hier niet tussen staat) telt mee voor de totale status.
+const overall = worst([
+    ...components.map((component) => component.state),
+    ...incidents.filter((incident) => incident.active && incident.impact !== 'none').map((incident) => incident.impact),
+]);
 const status = {
     status: overall,
     checked_at: now.toISOString(),
@@ -153,7 +158,7 @@ async function checkPlatform(attempt = 1) {
             throw new Error(`HTTP ${response.status} zonder onderdelen`);
         }
 
-        return body.components;
+        return body;
     } catch (error) {
         if (attempt < 2) {
             await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -182,6 +187,11 @@ async function loadIncidents() {
 
     for (const file of files) {
         parsed.push(parseIncident(file, await readFile(join(dir, file), 'utf8'), now));
+    }
+
+    // Meldingen die de super admin in Evenyo zet. Ligt Evenyo plat, dan zijn alleen de markdown-meldingen er.
+    for (const incident of platformBody?.incidents ?? []) {
+        parsed.push(fromPlatform(incident, now));
     }
 
     return parsed.sort((a, b) => (b.startedAt?.getTime() ?? 0) - (a.startedAt?.getTime() ?? 0));

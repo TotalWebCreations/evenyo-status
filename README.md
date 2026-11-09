@@ -20,7 +20,9 @@ Deze pagina draait los van de Evenyo-server. Ligt de server plat, dan blijft de 
 
 ## Een storing of onderhoud melden
 
-Maak een bestand aan in `incidents/`, bijvoorbeeld `incidents/2026-11-09-live-timing.md`. Gebruik `incidents/_voorbeeld.md` als basis; bestanden die met `_` beginnen worden overgeslagen.
+**Normaal:** in Evenyo onder **Super admin → Statuspagina**. Daar zet je een storing, verstoring, mededeling of gepland onderhoud, met onderdelen (of leeg voor heel Evenyo) en updates. Die staan binnen 5 minuten op de statuspagina; onderhoud met een eindtijd staat daarna vanzelf op afgerond.
+
+**Als Evenyo zelf plat ligt:** dan kun je daar niet bij. Maak dan een bestand aan in `incidents/`, bijvoorbeeld `incidents/2026-11-09-live-timing.md`. Gebruik `incidents/_voorbeeld.md` als basis; bestanden die met `_` beginnen worden overgeslagen.
 
 ```md
 ---
@@ -28,6 +30,7 @@ title: Live timing valt af en toe weg
 impact: degraded          # outage, degraded, maintenance of none
 components: realtime      # ids uit checks.config.json, met komma's
 started: 2026-11-09 14:20 # Nederlandse tijd
+ends:                     # optioneel, bij onderhoud: daarna vanzelf afgerond
 resolved:                 # leeg zolang de storing loopt
 ---
 ### 14:20 · Onderzoek

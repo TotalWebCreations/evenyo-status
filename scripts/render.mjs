@@ -68,6 +68,7 @@ export function render({ config, components, history, incidents, overall, now, t
             </div>
             <p class="meta">${[
                 incident.startedAt ? `${incident.scheduled ? 'Gepland' : 'Begonnen'} ${time(incident.startedAt, { weekday: 'short', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}` : null,
+                incident.endsAt && ! incident.resolvedAt ? `tot ${time(incident.endsAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}` : null,
                 incident.resolvedAt ? `opgelost ${time(incident.resolvedAt, { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}` : null,
                 incident.components.length ? incident.components.map((id) => escape(names[id] ?? id)).join(', ') : null,
             ].filter(Boolean).join(' · ')}</p>
@@ -155,7 +156,8 @@ h2{margin:40px 4px 14px;font-size:20px;font-weight:900;letter-spacing:-.3px}
 .incident h3{margin:0;font-size:17px;font-weight:800}
 .tag{height:24px;padding:0 9px;border-radius:7px;font-size:12px;font-weight:800;display:inline-flex;align-items:center}
 .tag.outage{background:var(--red-soft);color:var(--red)}
-.tag.degraded,.tag.maintenance{background:var(--amber-soft);color:#9A6200}
+.tag.degraded{background:var(--amber-soft);color:#9A6200}
+.tag.maintenance{background:#E7F0FF;color:var(--blue)}
 .tag.none{background:var(--soft);color:var(--ink-2)}
 .incident .meta{margin:6px 0 0;font-size:13px;color:var(--muted)}
 .incident .body{margin-top:10px;font-size:15px;line-height:1.55;color:var(--ink-2)}
@@ -209,8 +211,7 @@ footer{padding:8px 4px 0;font-size:13px;color:var(--muted);line-height:1.6}
     <section class="panel">${past.length ? past.map(incidentCard).join('') : '<p class="empty">Geen meldingen in de afgelopen 90 dagen.</p>'}</section>
 
     <footer>
-        <p>Werkt er iets niet, maar staat het hier niet? Mail ons via <a href="mailto:support@evenyo.io">support@evenyo.io</a>.<br>
-        Voor ontwikkelaars: <a href="status.json">status.json</a>.</p>
+        <p>Werkt er iets niet, maar staat het hier niet? Mail ons via <a href="mailto:support@evenyo.io">support@evenyo.io</a>.</p>
     </footer>
 </main>
 </body>
